@@ -1,24 +1,29 @@
 "
-" BufferList
+" GoToBuffer
 "
 " Author: Martin Lundberg
+" Version: 0.1
 "
-"if exists('g:loaded_bufferlist')
+"if exists('g:loaded_gotobuffer')
 	"finish
 "endif
-"let g:loaded_bufferlist = 1
+"let g:loaded_gotobuffer = 1
 
+if !exists('g:gotobuffer_maxheight')
+	let g:gotobuffer_maxheight = 10
+endif
 
-function! s:BufferListToggle()
-	if bufexists(bufnr("__BUFFERLIST__"))
-		execute ":" . bufnr("__BUFFERLIST__") . 'bwipeout'
+function! s:GoToBufferToggle()
+	if bufexists(bufnr("__GOTOBUFFER__"))
+		execute ":" . bufnr("__GOTOBUFFER__") . 'bwipeout'
 		return
 	endif
 
 	let s:pattern = ''
 	let buffers = s:get_all_buffers()
 
-	call s:create_window(len(buffers))
+	let height = len(buffers) < g:gotobuffer_maxheight ? len(buffers) : g:gotobuffer_maxheight
+	call s:create_window(height)
 	call s:init_mappings()
 
 	" Remove insert abbreviations from buffer
@@ -29,7 +34,6 @@ function! s:BufferListToggle()
 		put = filename
 	endfor
 	setlocal nomodifiable
-
 endfunction
 
 function! s:handle_key(char)
@@ -39,6 +43,8 @@ endfunction
 
 function! s:filter_list()
 	let buffers = s:get_all_buffers()
+	let height = len(buffers) < g:gotobuffer_maxheight ? len(buffers) : g:gotobuffer_maxheight
+	call s:set_window_height(height)
 
 	setlocal modifiable
 	" Clear the buffer
@@ -70,7 +76,7 @@ endfunction
 
 function! s:create_window(height)
 	" Create a new window and set some local options
-	execute "botright " . a:height . "new __BUFFERLIST__"
+	execute "botright " . a:height . "new __GOTOBUFFER__"
 	setlocal noshowcmd
 	setlocal noswapfile
 	setlocal buftype=nofile
@@ -81,6 +87,10 @@ function! s:create_window(height)
 	setlocal nomodified
 	setlocal nonumber
 	setlocal cursorline
+endfunction
+
+function! s:set_window_height(height)
+	exec 'n' . height
 endfunction
 
 function! s:close_window()
@@ -118,8 +128,6 @@ function! s:get_all_buffers()
 		endif
 	endwhile
 
-	resize len(buffers)
-
 	return buffers
 endfunction
 
@@ -135,4 +143,4 @@ function! s:GetSelectedBuffer()
 	return line
 endfunction
 
-nmap <leader>f :call <SID>BufferListToggle()<CR>
+nmap <leader>f :call <SID>GoToBufferToggle()<CR>
