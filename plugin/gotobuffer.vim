@@ -43,12 +43,12 @@ endfunction
 
 function! s:filter_list()
 	let buffers = s:get_all_buffers()
+
 	let height = len(buffers) < g:gotobuffer_maxheight ? len(buffers) : g:gotobuffer_maxheight
 	call s:set_window_height(height)
+	call s:clear_buffer()
 
 	setlocal modifiable
-	" Clear the buffer
-	silent %delete
 	echo s:pattern
 	for filename in buffers
 		put = filename
@@ -62,7 +62,8 @@ function! s:init_mappings()
 	let lowercase = split('abcdefghijklmnopqrstuvwxys', '\zs')
 	let uppercase = split('ABCDEFGHIJKLMNOPQRSTUVWXYS', '\zs')
 	"let punctuation = split('<>`@#~!"$%&/()=+*-_.,;:?\{}[] ', '\zs')
-	let characters = numbers + lowercase + uppercase
+	let punctuation = split('/._', '\zs')
+	let characters = numbers + lowercase + uppercase + punctuation
 	for char in characters
 		exec 'nnoremap <buffer> ' . char . ' :call <SID>handle_key("' . char . '")<CR>'
 	endfor
@@ -90,7 +91,15 @@ function! s:create_window(height)
 endfunction
 
 function! s:set_window_height(height)
-	exec 'n' . height
+	setlocal modifiable
+	resize a:height
+	setlocal nomodifiable
+endfunction
+
+function! s:clear_buffer()
+	setlocal modifiable
+	%d
+	setlocal nomodifiable
 endfunction
 
 function! s:close_window()
@@ -115,7 +124,8 @@ endfunction
 
 function! s:get_all_buffers()
 	let buffers = []
-	let bufcount = bufnr('$') " bufnr('$') gets the latest buffer number
+	" bufnr('$') gets the latest buffer number
+	let bufcount = bufnr('$')
 	let i = 0
 
 	while i <= bufcount
@@ -132,13 +142,13 @@ function! s:get_all_buffers()
 endfunction
 
 function! s:LoadSelectedBuffer()
-	let filename = s:GetSelectedBuffer()
+	let filename = s:get_selected_buffer()
 	" Remove the buffer list
 	bwipeout
 	exec ":buffer " . l:filename
 endfunction
 
-function! s:GetSelectedBuffer()
+function! s:get_selected_buffer()
 	let line = getline('.')
 	return line
 endfunction
